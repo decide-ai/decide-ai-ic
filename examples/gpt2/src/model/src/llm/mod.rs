@@ -15,16 +15,20 @@ use crate::auth::is_authenticated;
 
 
 
-#[ic_cdk::update(guard = "is_authenticated")]
+#[ic_cdk::update]
 fn generate(input_text: String, gen_iter: u8, temperature: f64) -> Result<String, String> {
     // First tokenize the input
     let tokens = match tokenize(input_text) {
         TokenizerResult::Ok(encoding) => encoding.token_ids,
         TokenizerResult::Err(e) => return Err(format!("Tokenization failed: {}", e)),
     };
+    let mut input_tokens = vec![50258, 198];
+    input_tokens.extend(tokens);
+    input_tokens.extend(vec![628, 50259, 198]);
+    ic_cdk::println!("input tokens{:?}",input_tokens);
 
     // Then run inference with the tokens
-    let generated_tokens = match internal_inference(tokens, gen_iter, temperature.into()) {
+    let generated_tokens = match internal_inference(input_tokens, gen_iter, temperature.into(), 50257_u32) {
         Ok(tokens) => tokens,
         Err(e) => return Err(format!("Inference failed: {}", e)),
     };

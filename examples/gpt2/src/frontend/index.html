@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>GPT2 Demo</title>
+    <base href="/" />
+    <link rel="icon" href="favicon.ico" />
+    <link type="text/css" rel="stylesheet" href="main.css" />
+  </head>
+  <body>
+    <main>
+      <img src="logo_white.svg" alt="Company Logo" class="main-logo"/>
+      <br />
+      <br />
+      <form action="#">
+        <div class="input-group">
+          <label for="prompt">Enter your question: &nbsp;</label>
+          <input id="prompt" type="text" />
+          <div class="controls">
+            <label>Tokens: <input type="range" id="tokens" min="1" max="30" value="10" /> <span id="tokens-value">10</span></label>
+            <label>Temperature: <input type="range" id="temp" min="0" max="1" step="0.1" value="0.2" /> <span id="temp-value">0.2</span></label>
+          </div>
+          <button type="submit">Generate</button>
+        </div>
+      </form>
+      <section id="response"></section>
+
+      <img src="logo2.svg" alt="DFINITY logo" class="secondary-logo" />
+    </main>
+  </body>
+  <script type="module" src="index.js"></script>
+</html>

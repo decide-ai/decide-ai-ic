@@ -15,6 +15,14 @@
           "name": "candid:service"
         }
       ]
+    },
+    "frontend": {
+      "dependencies": ["model"],
+      "frontend": {
+        "entrypoint": "src/frontend/index.html"
+      },
+      "source": ["src/frontend/dist"],
+      "type": "assets"
     }
   },
   "defaults": {

@@ -29,3 +29,23 @@ export const EOT = 50257;
 export const PREFIX_TOKENS = [50258, 198];
 export const SUFFIX_TOKENS = [628, 50259, 198];
 
+npm install @vitejs/plugin-react --save-dev
+
+npm install class-variance-authority clsx tailwind-merge lucide-react
+npm install @radix-ui/react-slider @radix-ui/react-slot
+
+
+
+npm install -g @shadcn/ui
+shadcn-ui init
+
+npm install -D @shadcn/ui
+npx shadcn-ui init
+
+
+npx shadcn-ui@latest add slider
+npx shadcn-ui@latest add button
+npx shadcn-ui@latest add input
+npx shadcn-ui@latest add card
+
+

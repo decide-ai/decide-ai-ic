@@ -99,7 +99,7 @@ pub enum InferenceResult {
 
 #[ic_cdk::update(guard = "is_authenticated")]
 fn inference(tokens: Vec<u32>, gen_iter: u8, temperature: f64) -> InferenceResult {
-    match internal_inference(tokens, gen_iter, temperature.into()) {
+    match internal_inference(tokens, gen_iter, temperature.into(), 50257_u32) {
         Ok(generated_tokens) => {
             InferenceResult::Ok(InferenceRecord {
                 result: TokenIDsResult::Ok(generated_tokens),
@@ -113,7 +113,7 @@ fn inference(tokens: Vec<u32>, gen_iter: u8, temperature: f64) -> InferenceResul
 
 
 
-pub fn internal_inference(tokens: Vec<u32>, gen_iter: u8, temperature: f64) -> Result<Vec<u32>, anyhow::Error> {
+pub fn internal_inference(tokens: Vec<u32>, gen_iter: u8, temperature: f64, eos: u32) -> Result<Vec<u32>, anyhow::Error> {
     let device = Device::Cpu;
     let mut input = Tensor::new(tokens.as_slice(), &device)?
         .reshape((1, tokens.len()))?;
@@ -130,15 +130,28 @@ pub fn internal_inference(tokens: Vec<u32>, gen_iter: u8, temperature: f64) -> R
                 let cache = cache.as_mut().ok_or_else(|| anyhow!("kv-cache not initialized"))?;
                 let mask_cache = mask_cache.as_ref().ok_or_else(|| anyhow!("mask cache not initialized"))?;
 
-                for i in 0..gen_iter {
+                // Reset the KV cache at the start of inference
+                cache.clear();
 
+                for _ in 0..gen_iter {
+
+                    // Perform forward pass and sampling
                     let logits = model.forward(&input, cache, Some(mask_cache))?;
                     let logits = logits.squeeze(0)?;
                     let last_logits = logits.get(logits.dim(0)? - 1)?;
                     let next_token = sample::sample(&last_logits, temperature, None, None)?;
 
+                    // Add next token to generated tokens
                     gen_token_ids.push(next_token);
+
+                    // Check for EOS and break if reached
+                    if eos == next_token {
+                        break;
+                    }
+
+                    // Update input for the next iteration
                     input = Tensor::new(vec![next_token], &device)?.reshape((1, 1))?;
+
                 }
 
                 Ok(gen_token_ids)
