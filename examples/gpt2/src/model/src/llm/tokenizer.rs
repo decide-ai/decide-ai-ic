@@ -27,15 +27,12 @@ pub enum DecodingResult {
     Err(String),
 }
 
-
 fn setup() -> Result<()> {
+    let bytes = call_tokenizer_bytes()
+        .map_err(|e| anyhow!("Failed to get tokenizer bytes: {}", e))?;
 
-    let bytes = match call_tokenizer_bytes() {
-        Ok(value) => value,
-        Err(_) => bytes::Bytes::new(),  // Return empty bytes in case of error
-    };
-
-    let tokenizer = Tokenizer::from_bytes(bytes).map_err(|e| anyhow!("Failed to create tokenizer: {}", e))?;
+    let tokenizer = Tokenizer::from_bytes(bytes)
+        .map_err(|e| anyhow!("Failed to create tokenizer: {}", e))?;
 
     TOKENIZER.with(|t| {
         *t.borrow_mut() = Some(tokenizer);

@@ -909,6 +909,7 @@ dependencies = [
  "ic-cdk 0.13.5",
  "ic-stable-structures",
  "ic-wasi-polyfill",
+ "paste",
  "serde",
  "serde_json",
  "tokenizers",

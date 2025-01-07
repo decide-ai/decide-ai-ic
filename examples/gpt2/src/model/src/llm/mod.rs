@@ -13,10 +13,19 @@ use crate::llm::candle::{TokenIDsResult, InferenceResult, InferenceRecord, inter
 use crate::llm::tokenizer::{TokenizerResult, tokenize, decode_batch};
 use crate::auth::is_authenticated;
 
+const MAX_TOKENS: u8 = 100;
+const MIN_TEMP: f64 = 0.1;
+const MAX_TEMP: f64 = 2.0;
+
 
 
 #[ic_cdk::update]
 fn generate(input_text: String, gen_iter: u8, temperature: f64) -> Result<String, String> {
+
+    if gen_iter > MAX_TOKENS {
+        return Err(format!("Token count exceeds maximum limit of {}", MAX_TOKENS));
+    }
+
     // First tokenize the input
     let tokens = match tokenize(input_text) {
         TokenizerResult::Ok(encoding) => encoding.token_ids,

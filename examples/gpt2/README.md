@@ -85,7 +85,8 @@ Parameters:
 - Generation length (nat8)
 - Sampling temperature (float64)
 
-Note: The maximum length of token generations depends on the input length.
+Note: The maximum length of response (number of tokens generated / generation length) depends on the input length. There is a finite amount of compute and generating the next work for a longer sequence of tokens requires more computation.
+
 
 ## Constants
 

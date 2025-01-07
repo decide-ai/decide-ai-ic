@@ -4,6 +4,7 @@ use bytes::Bytes;
 use crate::auth::is_authenticated;
 use crate::MAP;
 use std::sync::RwLock;
+use paste::paste;
 
 // Core storage trait
 pub trait Storage {
