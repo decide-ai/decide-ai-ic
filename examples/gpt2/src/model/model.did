@@ -1,0 +1,76 @@
+type TokenIDsResult = variant {
+    Ok: vec nat32;
+    Err: text;
+};
+
+type EmptyResult = variant {
+    Ok;
+    Err: text;
+};
+
+type SimplifiedCache = record {
+    layer_count: nat64;
+    total_data_size: nat64;
+};
+
+type InferenceRecord = record {
+    result: TokenIDsResult;
+};
+
+type InferenceResult = variant {
+    Ok: InferenceRecord;
+    Err: text;
+};
+
+
+type Tokenizer_Encoding = record {
+    token_ids: vec nat32;
+    tokens: vec text;
+};
+
+type Tokenizer_Result = variant {
+    Ok: Tokenizer_Encoding;
+    Err: text;
+};
+
+type Decoding_Result = variant {
+    Ok: vec text;
+    Err: text;
+};
+
+
+service : {
+    "add_authorized_principal": (principal) -> ();
+    "is_principal_authorized": (principal) -> (bool) query;
+
+    "append_config_bytes": (vec nat8) -> ();
+    "config_bytes_length": () -> (nat64) query;
+    "clear_config_bytes": () -> ();
+
+    "append_safetensors_bytes": (vec nat8) -> ();
+    "safetensors_bytes_length": () -> (nat64) query;
+    "clear_safetensors_bytes": () -> ();
+
+    "append_tokenizer_bytes": (vec nat8) -> ();
+    "tokenizer_bytes_length": () -> (nat64) query;
+    "clear_tokenizer_bytes": () -> ();
+
+    "store_safetensors_bytes_to_stable": () -> ();
+    "load_safetensors_bytes_from_stable": () -> ();
+
+    "store_tokenizer_bytes_to_stable": () -> ();
+    "load_tokenizer_bytes_from_stable": () -> ();
+
+    "setup_tokenizer": () -> (opt text);
+    "tokenize": (text) -> (Tokenizer_Result) query;
+    "decode": (vec nat32) -> (Decoding_Result) query;
+    "decode_batch": (vec nat32) -> (variant { Ok: text; Err: text }) query;
+
+    "setup_var_builder": () -> (EmptyResult);
+    "setup_model": () -> (EmptyResult);
+
+    "inference": (vec nat32, nat8, float64) -> (InferenceResult);
+    "generate": (text, nat8, float64) -> (variant { Ok: text; Err: text });
+}
+
+

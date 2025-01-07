@@ -1,0 +1,28 @@
+{
+  "canisters": {
+    "model": {
+      "candid": "src/model/model.did",
+      "package": "model",
+      "type": "custom",
+      "wasm": "./target/wasm32-wasi/release/model-ic.wasm",
+      "build": [
+        "RUSTFLAGS=\"$RUSTFLAGS -C target-feature=+simd128\" cargo build --release --target=wasm32-wasi && wasi2ic ./target/wasm32-wasi/release/model.wasm ./target/wasm32-wasi/release/model-ic.wasm && wasm-opt -Os -o ./target/wasm32-wasi/release/model-ic.wasm ./target/wasm32-wasi/release/model-ic.wasm"
+      ],
+      "shrink": true,
+      "gzip": true,
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ]
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
