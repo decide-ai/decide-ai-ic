@@ -39,3 +39,5 @@
 # model weight files
 **/*.safetensors
 
+# canbench data
+**/.canbench/*
