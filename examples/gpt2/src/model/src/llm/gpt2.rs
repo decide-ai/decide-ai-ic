@@ -1,5 +1,6 @@
 use candle::{D, DType, Device, Tensor, Result};
-use candle_nn::{Embedding, embedding, Conv1d, conv1d, Linear, VarBuilder, Module, Dropout};
+//use candle_nn::{Embedding, embedding, Conv1d, conv1d, Linear, VarBuilder, Module, Dropout};
+use candle_nn::{Embedding, embedding, Linear, VarBuilder, Module};
 use std::collections::HashSet;
 
 
@@ -158,7 +159,7 @@ impl GPT2 {
 impl Block {
 
     fn forward(&self, x: &Tensor, kv_cache: &mut KVCache, mask_cache: Option<&dyn MaskCache>, layer_idx: usize) -> Result<Tensor> {
-        let (batch_size, seq_length, _) = x.dims3()?;
+        //let (_batch_size, _seq_length, _) = x.dims3()?;
 
         let residual = x;
         let x = self.ln_1.forward(x)?;
@@ -296,12 +297,6 @@ impl Attention {
 
     fn load(vb: VarBuilder, config: &Config) -> Result<Self> {
         let n_embd = config.n_embd;
-        let conv1d_config = candle_nn::Conv1dConfig {
-            padding: 0,
-            dilation: 1,
-            groups: 1,
-            stride: 1,
-        };
 
         // Load weights for c_attn
         let c_attn_weight = vb.pp("c_attn").get((n_embd, 3 * n_embd), "weight")?;
@@ -353,12 +348,6 @@ impl MLP {
     }
 
     fn load(vb: VarBuilder, config: &Config) -> Result<Self> {
-        let conv1d_config = candle_nn::Conv1dConfig {
-            padding: 0,
-            dilation: 1,
-            groups: 1,
-            stride: 1,
-        };
 
         // Load weights for c_fc
         let c_fc_weight = vb.pp("c_fc").get((config.n_embd, 4 * config.n_embd), "weight")?;

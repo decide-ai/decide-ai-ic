@@ -8,7 +8,8 @@ use crate::storage::{
 };
 use crate::llm::{
     sample,
-    gpt2::{GPT2, Config, KVCache, MaskCache},
+    //gpt2::{GPT2, Config, KVCache, MaskCache},
+    gpt2::{GPT2, Config, KVCache},
     mask_cache::VecMaskCache,
 };
 use candle_nn::VarBuilder;
@@ -43,7 +44,8 @@ fn internal_setup_model() -> Result<(), anyhow::Error> {
 
     let safetensors_slice = safetensors_bytes.as_ref();
 
-    let vb = unsafe { VarBuilder::from_slice_safetensors(safetensors_slice, dtype, &device)? };
+    //let vb = unsafe { VarBuilder::from_slice_safetensors(safetensors_slice, dtype, &device)? };
+    let vb = VarBuilder::from_slice_safetensors(safetensors_slice, dtype, &device)?;
 
     GPT2_KV_CACHE.with(|cell| {
         let cache = KVCache::new(config.n_layer, true);  // Enable caching

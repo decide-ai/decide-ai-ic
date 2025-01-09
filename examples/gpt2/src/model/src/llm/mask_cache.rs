@@ -1,7 +1,8 @@
 use std::collections::HashSet;
 use candle::{DType, Device, Tensor};
 use crate::llm::gpt2::{MaskCache};
-use anyhow::{Result, Error as E};
+//use anyhow::{Result, Error as E};
+use anyhow::{Result};
 
 pub struct VecMaskCache {
     masks: Vec<Tensor>,

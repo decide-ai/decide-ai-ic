@@ -71,6 +71,9 @@ service : {
 
     "inference": (vec nat32, nat8, float64) -> (InferenceResult);
     "generate": (text, nat8, float64) -> (variant { Ok: text; Err: text });
-}
+
+    "fibonacci": (nat32) -> (nat32) query;
+
+ }
 
 

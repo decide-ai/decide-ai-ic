@@ -151,6 +151,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "325918d6fe32f23b19878fe4b34794ae41fc19ddbe53b10571a4874d44ffd39b"
 
 [[package]]
+name = "canbench-rs"
+version = "0.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "497d900e11ab1891dd9743dd45dbeaada540ce323aa1adc7fc0ce1da2c6e86ff"
+dependencies = [
+ "canbench-rs-macros",
+ "candid",
+ "ic-cdk 0.12.2",
+ "serde",
+]
+
+[[package]]
+name = "canbench-rs-macros"
+version = "0.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a5509bcfe6eeb86f057d46fbf20a2ba6b6bf9a1099b053a8f491cd7a909dfa6"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "candid"
 version = "0.10.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -678,6 +701,19 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "ic-cdk"
+version = "0.12.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0e908da565d9e304e83732500069ebb959e3d2cad80f894889ea37207112c7a0"
+dependencies = [
+ "candid",
+ "ic-cdk-macros 0.8.4",
+ "ic0 0.21.1",
+ "serde",
+ "serde_bytes",
+]
+
+[[package]]
+name = "ic-cdk"
 version = "0.13.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3b1da6a25b045f9da3c9459c0cb2b0700ac368ee16382975a17185a23b9c18ab"
@@ -691,15 +727,29 @@ dependencies = [
 
 [[package]]
 name = "ic-cdk"
-version = "0.15.1"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "038ff230bf0fc8630943e3c52e989d248a7c89834ccb65da408fabc5817a475b"
+checksum = "dd8ecacd682fa05a985253592963306cb9799622d7b1cce4b1edb89c6ec85be1"
 dependencies = [
  "candid",
- "ic-cdk-macros 0.15.0",
+ "ic-cdk-macros 0.16.0",
  "ic0 0.23.0",
  "serde",
  "serde_bytes",
+]
+
+[[package]]
+name = "ic-cdk-macros"
+version = "0.8.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a5a618e4020cea88e933d8d2f8c7f86d570ec06213506a80d4f2c520a9bba512"
+dependencies = [
+ "candid",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "serde_tokenstream 0.1.7",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -718,9 +768,9 @@ dependencies = [
 
 [[package]]
 name = "ic-cdk-macros"
-version = "0.15.0"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3af44fb4ec3a4b18831c9d3303ca8fa2ace846c4022d50cb8df4122635d3782e"
+checksum = "0d4d857135deef20cc7ea8f3869a30cd9cfeb1392b3a81043790b2cd82adc3e0"
 dependencies = [
  "candid",
  "proc-macro2",
@@ -741,12 +791,12 @@ dependencies = [
 
 [[package]]
 name = "ic-wasi-polyfill"
-version = "0.5.0"
+version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dcb0693d039ca70039186dbe8c15a280e3f363431549ea7c25c6cf855280130d"
+checksum = "e77ece008b3de4409a700f2d816f29d5eb88b59ef82fb99ea8af97365d773ddb"
 dependencies = [
  "function_name",
- "ic-cdk 0.13.5",
+ "ic-cdk 0.16.0",
  "ic-stable-structures",
  "rand",
  "stable-fs",
@@ -902,6 +952,7 @@ dependencies = [
  "anyhow",
  "bincode",
  "bytes",
+ "canbench-rs",
  "candid",
  "candle-core",
  "candle-nn",
@@ -1386,13 +1437,13 @@ dependencies = [
 
 [[package]]
 name = "stable-fs"
-version = "0.5.1"
+version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "524b5b08bd3249c6ed91c7899606c2d4db812732ac838df418ff695a8603effd"
+checksum = "74dab162ea1b0d6ea864b70217a439cd5c85f233058a1c6b562b75aab5183744"
 dependencies = [
  "bitflags 2.6.0",
  "ciborium",
- "ic-cdk 0.15.1",
+ "ic-cdk 0.16.0",
  "ic-stable-structures",
  "serde",
  "serde_bytes",

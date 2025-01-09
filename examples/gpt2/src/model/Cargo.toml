@@ -18,6 +18,11 @@ candle-nn = { git = "https://github.com/huggingface/candle.git", branch = "main"
 tokenizers = { version = "0.20.1", default-features = false, features = ["unstable_wasm"] }
 serde_json = "1.0.128"
 half = "2.4.1"
-ic-stable-structures = "0.6.5"
-ic-wasi-polyfill = "0.5.0"
+ic-stable-structures = "0.6.7"
+ic-wasi-polyfill = "0.6.4"
 paste = "1.0"
+canbench-rs = { version = "0.1.8", optional = true }
+
+
+#[dev-dependencies]
+#canbench = "0.1.8"
