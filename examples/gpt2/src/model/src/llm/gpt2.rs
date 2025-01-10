@@ -1,5 +1,4 @@
 use candle::{D, DType, Device, Tensor, Result};
-//use candle_nn::{Embedding, embedding, Conv1d, conv1d, Linear, VarBuilder, Module, Dropout};
 use candle_nn::{Embedding, embedding, Linear, VarBuilder, Module};
 use std::collections::HashSet;
 
