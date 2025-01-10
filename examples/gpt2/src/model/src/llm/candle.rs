@@ -167,3 +167,101 @@ pub fn internal_inference(tokens: Vec<u32>, gen_iter: u8, temperature: f64, eos:
 
 
 
+
+
+
+
+
+#[cfg(feature = "canbench-rs")]
+mod inference_benchmarks {
+    use super::*;
+    use canbench_rs::bench;
+
+    // Common test inputs that reflect real usage patterns
+    const TYPICAL_PROMPT: [u32; 4] = [1, 2, 3, 4];  // Small prompt
+    const LONGER_PROMPT: [u32; 10] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];  // Longer conversation context
+    const TYPICAL_TEMP: f64 = 0.7;  // Common temperature setting
+    const EOS_TOKEN: u32 = 50257;
+
+    /// Benchmark typical chat completion
+    /// This represents the most common use case - short prompt with standard settings
+    #[bench]
+    fn typical_chat_inference() {
+        let _ = internal_inference(
+            TYPICAL_PROMPT.to_vec(),
+            5,  // Typical number of tokens for a short response
+            TYPICAL_TEMP,
+            EOS_TOKEN
+        );
+    }
+
+    /// Benchmark longer conversation context
+    /// Tests performance with more context tokens
+    #[bench]
+    fn long_context_inference() {
+        let _ = internal_inference(
+            LONGER_PROMPT.to_vec(),
+            5,
+            TYPICAL_TEMP,
+            EOS_TOKEN
+        );
+    }
+
+    /// Benchmark longer response generation
+    /// Tests performance when generating longer responses
+    #[bench]
+    fn long_response_inference() {
+        let _ = internal_inference(
+            TYPICAL_PROMPT.to_vec(),
+            20,  // More generated tokens
+            TYPICAL_TEMP,
+            EOS_TOKEN
+        );
+    }
+
+    /// Benchmark creative vs focused responses
+    /// Tests how temperature affects performance
+    #[bench]
+    fn temperature_comparison() {
+        // Creative response (high temperature)
+        let _ = internal_inference(
+            TYPICAL_PROMPT.to_vec(),
+            5,
+            0.9,
+            EOS_TOKEN
+        );
+
+        // Focused response (low temperature)
+        let _ = internal_inference(
+            TYPICAL_PROMPT.to_vec(),
+            5,
+            0.3,
+            EOS_TOKEN
+        );
+    }
+
+    /// Benchmark cache impact in conversation
+    /// Simulates back-and-forth conversation with same context
+    #[bench]
+    fn conversation_flow() {
+        // First response
+        let _ = internal_inference(
+            TYPICAL_PROMPT.to_vec(),
+            5,
+            TYPICAL_TEMP,
+            EOS_TOKEN
+        );
+
+        // Follow-up response
+        let _ = internal_inference(
+            TYPICAL_PROMPT.to_vec(),
+            5,
+            TYPICAL_TEMP,
+            EOS_TOKEN
+        );
+    }
+}
+
+
+
+

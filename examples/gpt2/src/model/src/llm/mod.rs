@@ -5,13 +5,11 @@ pub mod gpt2;
 pub mod candle;
 pub mod sample;
 pub mod tokenizer;
-pub mod benchmarks;
 
 // Re-export common items
 pub use candle::EmptyResult;
 pub use gpt2::Config;
 pub use mask_cache::VecMaskCache;
-pub use benchmarks::benchmark_tokenizer_small;
 
 //use crate::llm::candle::{TokenIDsResult, InferenceResult, InferenceRecord, internal_inference};
 use crate::llm::candle::{internal_inference};
