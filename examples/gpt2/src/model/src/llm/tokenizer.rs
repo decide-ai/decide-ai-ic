@@ -42,7 +42,7 @@ fn setup() -> Result<()> {
 }
 
 #[ic_cdk::update(guard = "is_authenticated")]
-fn setup_tokenizer() -> Result<(), String> {
+pub fn setup_tokenizer() -> Result<(), String> {
     setup().map_err(|err| format!("Failed to setup tokenizer: {}", err))
 }
 

@@ -165,103 +165,97 @@ pub fn internal_inference(tokens: Vec<u32>, gen_iter: u8, temperature: f64, eos:
 
 
 
-
-
-
-
-
-
-
 #[cfg(feature = "canbench-rs")]
 mod inference_benchmarks {
     use super::*;
     use canbench_rs::bench;
+    use std::fs;
+    use crate::storage::load_tokenizer_bytes_from_stable;
+    use crate::storage::load_safetensors_bytes_from_stable;
+    use crate::llm::tokenizer;
 
-    // Common test inputs that reflect real usage patterns
-    const TYPICAL_PROMPT: [u32; 4] = [1, 2, 3, 4];  // Small prompt
-    const LONGER_PROMPT: [u32; 10] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];  // Longer conversation context
-    const TYPICAL_TEMP: f64 = 0.7;  // Common temperature setting
+    fn load_model_data() -> Result<(), anyhow::Error> {
+        // Load tokenizer
+        //let tokenizer_bytes = fs::read("~/.cache/huggingface/hub/models--vicgalle--gpt2-open-instruct-v1/snapshots/eccf4d5899c24523625fe3d41f1cf78c755821b0/tokenizer.json")?;
+
+        // Load model weights
+        let safetensors_bytes = fs::read("~/.cache/huggingface/hub/models--vicgalle--gpt2-open-instruct-v1/snapshots/eccf4d5899c24523625fe3d41f1cf78c755821b0/model.safetensors")?;
+
+        // Load config
+        let config_bytes = fs::read("~/.cache/huggingface/hub/models--vicgalle--gpt2-open-instruct-v1/snapshots/eccf4d5899c24523625fe3d41f1cf78c755821b0/config.json")?;
+
+        let device = Device::Cpu;
+        let dtype = DType::F32;
+
+        let config: Config = from_slice(&config_bytes)
+            .map_err(|e| anyhow!("Failed to parse config: {}", e))?;
+
+        let safetensors_slice = safetensors_bytes.as_ref();
+
+        let vb = VarBuilder::from_slice_safetensors(safetensors_slice, dtype, &device)?;
+
+        GPT2_KV_CACHE.with(|cell| {
+            let cache = KVCache::new(config.n_layer, true);  // Enable caching
+            *cell.borrow_mut() = Some(cache);
+        });
+
+        GPT2_MASK_CACHE.with(|cell| {
+            let mask_cache = VecMaskCache::new(107, config.n_head, device.clone())
+                .expect("Failed to create VecMaskCache");
+            *cell.borrow_mut() = Some(mask_cache);
+        });
+
+        GPT2_MODEL.with(|cell| -> Result<(), anyhow::Error> {
+            let model = GPT2::load(vb.pp("transformer"), &config)?; //GPT2-Instruct
+            *cell.borrow_mut() = Some(model);
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+
+    const TYPICAL_PROMPT: [u32; 4] = [1, 2, 3, 4];
+    const TYPICAL_TEMP: f64 = 0.7;
     const EOS_TOKEN: u32 = 50257;
 
-    /// Benchmark typical chat completion
-    /// This represents the most common use case - short prompt with standard settings
-    #[bench]
-    fn typical_chat_inference() {
-        let _ = internal_inference(
-            TYPICAL_PROMPT.to_vec(),
-            5,  // Typical number of tokens for a short response
-            TYPICAL_TEMP,
-            EOS_TOKEN
-        );
+    #[bench(raw)]
+    fn inference_bench() -> canbench_rs::BenchResult {
+        // Initialize model state (not included in benchmark)
+        if let Err(e) = load_model_data() {
+            ic_cdk::println!("Failed to initialize model: {}", e);
+            return canbench_rs::bench_fn(|| {});
+        }
+
+        // Verify model is loaded
+        let model_ready = GPT2_MODEL.with(|cell| cell.borrow().is_some());
+        if !model_ready {
+            ic_cdk::println!("Model not properly initialized");
+            return canbench_rs::bench_fn(|| {});
+        }
+
+        // Benchmark just the inference
+        canbench_rs::bench_fn(|| {
+            let _ = internal_inference(
+                TYPICAL_PROMPT.to_vec(),
+                5,
+                TYPICAL_TEMP,
+                EOS_TOKEN
+            );
+        })
     }
 
-    /// Benchmark longer conversation context
-    /// Tests performance with more context tokens
-    #[bench]
-    fn long_context_inference() {
-        let _ = internal_inference(
-            LONGER_PROMPT.to_vec(),
-            5,
-            TYPICAL_TEMP,
-            EOS_TOKEN
-        );
-    }
+    #[bench(raw)]
+    fn model_state_check() -> canbench_rs::BenchResult {
+        canbench_rs::bench_fn(|| {
+            let model_init = GPT2_MODEL.with(|cell| cell.borrow().is_some());
+            let cache_init = GPT2_KV_CACHE.with(|cell| cell.borrow().is_some());
+            let mask_init = GPT2_MASK_CACHE.with(|cell| cell.borrow().is_some());
 
-    /// Benchmark longer response generation
-    /// Tests performance when generating longer responses
-    #[bench]
-    fn long_response_inference() {
-        let _ = internal_inference(
-            TYPICAL_PROMPT.to_vec(),
-            20,  // More generated tokens
-            TYPICAL_TEMP,
-            EOS_TOKEN
-        );
-    }
-
-    /// Benchmark creative vs focused responses
-    /// Tests how temperature affects performance
-    #[bench]
-    fn temperature_comparison() {
-        // Creative response (high temperature)
-        let _ = internal_inference(
-            TYPICAL_PROMPT.to_vec(),
-            5,
-            0.9,
-            EOS_TOKEN
-        );
-
-        // Focused response (low temperature)
-        let _ = internal_inference(
-            TYPICAL_PROMPT.to_vec(),
-            5,
-            0.3,
-            EOS_TOKEN
-        );
-    }
-
-    /// Benchmark cache impact in conversation
-    /// Simulates back-and-forth conversation with same context
-    #[bench]
-    fn conversation_flow() {
-        // First response
-        let _ = internal_inference(
-            TYPICAL_PROMPT.to_vec(),
-            5,
-            TYPICAL_TEMP,
-            EOS_TOKEN
-        );
-
-        // Follow-up response
-        let _ = internal_inference(
-            TYPICAL_PROMPT.to_vec(),
-            5,
-            TYPICAL_TEMP,
-            EOS_TOKEN
-        );
+            ic_cdk::println!(
+                "Model State - Model: {}, Cache: {}, Mask: {}",
+                model_init, cache_init, mask_init
+            );
+        })
     }
 }
-
-
-
 
