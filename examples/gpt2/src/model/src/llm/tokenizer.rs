@@ -111,7 +111,7 @@ pub fn decode_batch(input_token_ids: Vec<u32>) -> Result<String, String> {
 
 
 
-
+/*
 #[cfg(feature = "canbench-rs")]
 mod tokenizer_benchmarks {
     use super::*;
@@ -230,4 +230,7 @@ rather than replacing them. The time to act is now—together, we can shape the 
         };
     }
 
+
+
 }
+*/

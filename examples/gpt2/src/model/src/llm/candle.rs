@@ -167,33 +167,57 @@ pub fn internal_inference(tokens: Vec<u32>, gen_iter: u8, temperature: f64, eos:
 mod inference_benchmarks {
     use super::*;
     use canbench_rs::bench;
-    use std::fs;
-    use crate::storage::load_tokenizer_bytes_from_stable;
-    use crate::storage::load_safetensors_bytes_from_stable;
-    use crate::llm::tokenizer;
+    use std::println; // Add explicit println import
 
-    fn load_model_data() -> Result<(), anyhow::Error> {
-        // Load tokenizer
-        //let tokenizer_bytes = fs::read("~/.cache/huggingface/hub/models--vicgalle--gpt2-open-instruct-v1/snapshots/eccf4d5899c24523625fe3d41f1cf78c755821b0/tokenizer.json")?;
+    const TYPICAL_PROMPT: [u32; 4] = [1, 2, 3, 4];
+    const TYPICAL_TEMP: f64 = 0.7;
+    const EOS_TOKEN: u32 = 50257;
 
-        // Load model weights
-        let safetensors_bytes = fs::read("~/.cache/huggingface/hub/models--vicgalle--gpt2-open-instruct-v1/snapshots/eccf4d5899c24523625fe3d41f1cf78c755821b0/model.safetensors")?;
-
-        // Load config
-        let config_bytes = fs::read("~/.cache/huggingface/hub/models--vicgalle--gpt2-open-instruct-v1/snapshots/eccf4d5899c24523625fe3d41f1cf78c755821b0/config.json")?;
+    fn initialize_model() -> Result<(), anyhow::Error> {
+        println!("Starting model initialization...");
 
         let device = Device::Cpu;
         let dtype = DType::F32;
 
+        // Load and verify config
+        println!("Loading config file...");
+        let config_bytes = match std::fs::read("canbench_assets/config.json") {
+            Ok(bytes) => {
+                println!("Config loaded successfully, size: {} bytes", bytes.len());
+                bytes
+            },
+            Err(e) => {
+                println!("Failed to load config: {}", e);
+                return Err(anyhow!("Config load error: {}", e));
+            }
+        };
+
         let config: Config = from_slice(&config_bytes)
-            .map_err(|e| anyhow!("Failed to parse config: {}", e))?;
+            .map_err(|e| {
+                println!("Failed to parse config: {}", e);
+                anyhow!("Config parse error: {}", e)
+            })?;
 
-        let safetensors_slice = safetensors_bytes.as_ref();
+        // Load and verify model
+        println!("Loading model file...");
+        let model_bytes = match std::fs::read("canbench_assets/model.safetensors") {
+            Ok(bytes) => {
+                println!("Model loaded successfully, size: {} bytes", bytes.len());
+                bytes
+            },
+            Err(e) => {
+                println!("Failed to load model: {}", e);
+                return Err(anyhow!("Model load error: {}", e));
+            }
+        };
 
-        let vb = VarBuilder::from_slice_safetensors(safetensors_slice, dtype, &device)?;
+        println!("Creating VarBuilder...");
+        let vb = VarBuilder::from_slice_safetensors(&model_bytes, dtype, &device)?;
 
+        // Initialize caches
+        println!("Initializing caches...");
         GPT2_KV_CACHE.with(|cell| {
-            let cache = KVCache::new(config.n_layer, true);  // Enable caching
+            let cache = KVCache::new(config.n_layer, true);
             *cell.borrow_mut() = Some(cache);
         });
 
@@ -203,57 +227,68 @@ mod inference_benchmarks {
             *cell.borrow_mut() = Some(mask_cache);
         });
 
+        println!("Loading GPT2 model...");
         GPT2_MODEL.with(|cell| -> Result<(), anyhow::Error> {
-            let model = GPT2::load(vb.pp("transformer"), &config)?; //GPT2-Instruct
+            let model = GPT2::load(vb.pp("transformer"), &config)?;
             *cell.borrow_mut() = Some(model);
+            println!("Model loaded successfully!");
             Ok(())
         })?;
 
         Ok(())
     }
 
-    const TYPICAL_PROMPT: [u32; 4] = [1, 2, 3, 4];
-    const TYPICAL_TEMP: f64 = 0.7;
-    const EOS_TOKEN: u32 = 50257;
-
     #[bench(raw)]
     fn inference_bench() -> canbench_rs::BenchResult {
-        // Initialize model state (not included in benchmark)
-        if let Err(e) = load_model_data() {
-            ic_cdk::println!("Failed to initialize model: {}", e);
+        println!("Starting inference benchmark...");
+
+        // Initialize model state
+        match initialize_model() {
+            Ok(_) => println!("Model initialized successfully"),
+            Err(e) => {
+                println!("Failed to initialize model: {}", e);
+                return canbench_rs::bench_fn(|| {});
+            }
+        }
+
+        let model_state = GPT2_MODEL.with(|cell| {
+            let is_some = cell.borrow().is_some();
+            println!("Model loaded state: {}", is_some);
+            is_some
+        });
+
+        if !model_state {
+            println!("Model not properly initialized");
             return canbench_rs::bench_fn(|| {});
         }
 
-        // Verify model is loaded
-        let model_ready = GPT2_MODEL.with(|cell| cell.borrow().is_some());
-        if !model_ready {
-            ic_cdk::println!("Model not properly initialized");
-            return canbench_rs::bench_fn(|| {});
-        }
+        println!("Starting inference with prompt length: {}", TYPICAL_PROMPT.len());
 
-        // Benchmark just the inference
         canbench_rs::bench_fn(|| {
-            let _ = internal_inference(
+            match internal_inference(
                 TYPICAL_PROMPT.to_vec(),
                 5,
                 TYPICAL_TEMP,
                 EOS_TOKEN
-            );
+            ) {
+                Ok(tokens) => println!("Inference generated {} tokens", tokens.len()),
+                Err(e) => println!("Inference failed: {}", e),
+            };
         })
     }
 
     #[bench(raw)]
     fn model_state_check() -> canbench_rs::BenchResult {
+        println!("Running model state check...");
         canbench_rs::bench_fn(|| {
             let model_init = GPT2_MODEL.with(|cell| cell.borrow().is_some());
             let cache_init = GPT2_KV_CACHE.with(|cell| cell.borrow().is_some());
             let mask_init = GPT2_MASK_CACHE.with(|cell| cell.borrow().is_some());
 
-            ic_cdk::println!(
+            println!(
                 "Model State - Model: {}, Cache: {}, Mask: {}",
                 model_init, cache_init, mask_init
             );
         })
     }
 }
-

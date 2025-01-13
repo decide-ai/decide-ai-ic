@@ -9,7 +9,7 @@ use crate::auth::ensure_authorized;
 pub mod auth;
 pub mod storage;
 pub mod llm;
-pub mod benchmarks;
+//pub mod benchmarks; //demo benchmarks
 
 // Re-export common items from storage
 pub use storage::{
@@ -96,7 +96,4 @@ fn post_upgrade() {
     let caller = ic_cdk::caller();
     ensure_authorized(caller);
 }
-
-
-
 
