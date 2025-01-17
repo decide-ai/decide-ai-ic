@@ -307,18 +307,102 @@ mod inference_benchmarks {
     }
 
 
-    #[bench(raw)]
-    fn model_state_check() -> canbench_rs::BenchResult {
-        println!("Running model state check...");
-        canbench_rs::bench_fn(|| {
-            let model_init = GPT2_MODEL.with(|cell| cell.borrow().is_some());
-            let cache_init = GPT2_KV_CACHE.with(|cell| cell.borrow().is_some());
-            let mask_init = GPT2_MASK_CACHE.with(|cell| cell.borrow().is_some());
 
-            println!(
-                "Model State - Model: {}, Cache: {}, Mask: {}",
-                model_init, cache_init, mask_init
-            );
-        })
+    use paste::paste;
+
+    fn create_prompt(length: usize) -> Vec<u32> {
+        let mut prompt = Vec::with_capacity(length);
+        for i in 0..length {
+            prompt.push(BASE_PROMPT[i % BASE_PROMPT.len()]);
+        }
+        prompt
     }
+
+    const BASE_PROMPT: &[u32] = &[1, 2, 3, 4];
+
+
+    // Define individual benchmark functions instead of using nested repetition
+    macro_rules! define_bench_fn {
+        ($input_len:expr, $gen_len:expr) => {
+            paste! {
+                #[bench(raw)]
+                fn [<inference_bench_input_ $input_len _gen_ $gen_len>]() -> canbench_rs::BenchResult {
+                    println!("Starting inference benchmark with input length {} and gen length {}",
+                            $input_len, $gen_len);
+
+                    // Initialize model if needed
+                    let model_state = GPT2_MODEL.with(|cell| cell.borrow().is_some());
+                    if !model_state {
+                        if let Err(e) = initialize_model() {
+                            println!("Failed to initialize model: {}", e);
+                            return canbench_rs::bench_fn(|| {});
+                        }
+                    }
+
+                    let prompt = create_prompt($input_len);
+
+                    canbench_rs::bench_fn(|| {
+                        match internal_inference(
+                            prompt.clone(),
+                            $gen_len,
+                            TYPICAL_TEMP,
+                            EOS_TOKEN
+                        ) {
+                            Ok(tokens) => println!(
+                                "Input len: {}, Gen len: {}, Output tokens: {}",
+                                $input_len, $gen_len, tokens.len()
+                            ),
+                            Err(e) => println!("Inference failed: {}", e),
+                        };
+                    })
+                }
+            }
+        };
+    }
+
+    // Call the macro for each combination explicitly
+    define_bench_fn!(1, 1);
+    define_bench_fn!(1, 2);
+    define_bench_fn!(1, 4);
+    define_bench_fn!(1, 8);
+    define_bench_fn!(2, 1);
+    define_bench_fn!(2, 2);
+    define_bench_fn!(2, 4);
+    define_bench_fn!(2, 8);
+    define_bench_fn!(4, 1);
+    define_bench_fn!(4, 2);
+    define_bench_fn!(4, 4);
+    define_bench_fn!(4, 8);
+    define_bench_fn!(8, 1);
+    define_bench_fn!(8, 2);
+    define_bench_fn!(8, 4);
+    define_bench_fn!(8, 8);
+    define_bench_fn!(16, 1);
+    define_bench_fn!(16, 2);
+    define_bench_fn!(16, 4);
+    define_bench_fn!(16, 8);
+    define_bench_fn!(32, 1);
+    define_bench_fn!(32, 2);
+    define_bench_fn!(32, 4);
+    define_bench_fn!(32, 8);
+    define_bench_fn!(64, 1);
+    define_bench_fn!(64, 2);
+    define_bench_fn!(64, 4);
+    define_bench_fn!(64, 8);
+    define_bench_fn!(128, 1);
+    define_bench_fn!(128, 2);
+    define_bench_fn!(128, 4);
+    define_bench_fn!(128, 8);
+    define_bench_fn!(256, 1);
+    define_bench_fn!(256, 2);
+    define_bench_fn!(256, 4);
+    define_bench_fn!(256, 8);
+    define_bench_fn!(512, 1);
+    define_bench_fn!(512, 2);
+    define_bench_fn!(512, 4);
+    define_bench_fn!(512, 8);
+    define_bench_fn!(1024, 1);
+    define_bench_fn!(1024, 2);
+    define_bench_fn!(1024, 4);
+    define_bench_fn!(1024, 8);
 }

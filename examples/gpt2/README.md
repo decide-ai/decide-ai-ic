@@ -2,6 +2,30 @@
 
 This project implements GPT-2 inference on the Internet Computer blockchain, providing a straightforward way to deploy and interact with the model.
 
+
+
+## Analysis
+
+
+| Input Length | gen_1 | gen_2 | gen_4 | gen_8 |
+|-------------|--------|--------|--------|--------|
+| 1 | 1.12B | 2.25B | 4.49B | 9.00B |
+| 2 | 1.15B | 2.27B | 4.52B | 9.02B |
+| 4 | 1.72B | 2.84B | 5.09B | 9.60B |
+| 8 | 3.04B | 4.17B | 6.42B | 10.93B |
+| 16 | 5.70B | 6.83B | 9.09B | 13.62B |
+| 32 | 11.06B | 12.20B | 14.47B | 19.01B |
+| 64 | 22.15B | 23.30B | 25.59B | 30.18B |
+| 128 | 44.53B | 45.72B | 48.08B | 52.82B |
+| 256 | 91.77B | 93.05B | 95.58B | 100.66B |
+| 512 | 196.22B | 197.77B | 200.80B | 206.88B |
+| 1024 | 445.26B | 445.26B | 445.26B | 445.26B |
+
+Observations:
+1. The 1024 input length shows identical values across all generation lengths (445.26B), which might indicate a limit or issue at that input size
+2. Input length has an exponential impact on instruction count
+
+
 ## Prerequisites
 
 - Install the Internet Computer SDK (`dfx`): https://internetcomputer.org/docs/current/developer-docs/getting-started/install
