@@ -180,36 +180,30 @@ mod inference_benchmarks {
         let dtype = DType::F32;
 
         // Load and verify config
-        println!("Loading config file...");
-        let config_bytes = match std::fs::read("canbench_assets/config.json") {
-            Ok(bytes) => {
-                println!("Config loaded successfully, size: {} bytes", bytes.len());
-                bytes
-            },
-            Err(e) => {
-                println!("Failed to load config: {}", e);
-                return Err(anyhow!("Config load error: {}", e));
-            }
-        };
-
-        let config: Config = from_slice(&config_bytes)
+        //let config_bytes = include_bytes!("./canbench_assets/config.json");
+        let config_bytes = include_bytes!("../../../../canbench_assets/config.json");
+        let config: Config = from_slice(config_bytes)
             .map_err(|e| {
                 println!("Failed to parse config: {}", e);
                 anyhow!("Config parse error: {}", e)
             })?;
 
-        // Load and verify model
-        println!("Loading model file...");
-        let model_bytes = match std::fs::read("canbench_assets/model.safetensors") {
-            Ok(bytes) => {
-                println!("Model loaded successfully, size: {} bytes", bytes.len());
-                bytes
-            },
-            Err(e) => {
-                println!("Failed to load model: {}", e);
-                return Err(anyhow!("Model load error: {}", e));
-            }
-        };
+        // Calculate required size
+        const MODEL_SIZE: usize = 510368814; // Your exact file size
+        let pages = ic_cdk::api::stable::stable_size();
+        let available_bytes = pages as usize * 65536;
+
+        println!("Stable memory pages: {}, bytes available: {}", pages, available_bytes);
+
+        if available_bytes < MODEL_SIZE {
+            return Err(anyhow!("Not enough stable memory. Need {} bytes, have {}",
+                MODEL_SIZE, available_bytes));
+        }
+
+        // Read the model
+        let mut model_bytes = vec![0u8; MODEL_SIZE];
+        ic_cdk::api::stable::stable_read(0, &mut model_bytes);
+        println!("Read {} bytes from stable memory", MODEL_SIZE);
 
         println!("Creating VarBuilder...");
         let vb = VarBuilder::from_slice_safetensors(&model_bytes, dtype, &device)?;
@@ -237,6 +231,41 @@ mod inference_benchmarks {
 
         Ok(())
     }
+
+
+    #[bench(raw)]
+    fn initialization_only() -> canbench_rs::BenchResult {
+        // Clear any existing model state
+        GPT2_MODEL.with(|cell| {
+            *cell.borrow_mut() = None;
+        });
+        GPT2_KV_CACHE.with(|cell| {
+            *cell.borrow_mut() = None;
+        });
+        GPT2_MASK_CACHE.with(|cell| {
+            *cell.borrow_mut() = None;
+        });
+
+        canbench_rs::bench_fn(|| {
+            // Do the actual initialization inside the benchmark
+            if let Err(e) = initialize_model() {
+                println!("Failed to initialize model: {}", e);
+                return;
+            }
+
+            // Verify initialization
+            let model_state = GPT2_MODEL.with(|cell| {
+                let is_some = cell.borrow().is_some();
+                println!("Model loaded state: {}", is_some);
+                is_some
+            });
+
+            if !model_state {
+                println!("Model not properly initialized");
+            }
+        })
+    }
+
 
     #[bench(raw)]
     fn inference_bench() -> canbench_rs::BenchResult {
@@ -276,6 +305,7 @@ mod inference_benchmarks {
             };
         })
     }
+
 
     #[bench(raw)]
     fn model_state_check() -> canbench_rs::BenchResult {

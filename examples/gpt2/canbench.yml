@@ -4,3 +4,6 @@ build_cmd: >-
     wasm-opt -Os -o ./target/wasm32-wasi/release/model-ic.wasm ./target/wasm32-wasi/release/model-ic.wasm
 
 wasm_path: ./target/wasm32-wasi/release/model-ic.wasm
+
+stable_memory:
+  file: ./canbench_assets/model.safetensors
