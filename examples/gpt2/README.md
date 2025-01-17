@@ -6,6 +6,9 @@ This project implements GPT-2 inference on the Internet Computer blockchain, pro
 
 ## Analysis
 
+### Raw Instruction Counts
+
+The following table shows the number of instructions executed for different input lengths and generation lengths:
 
 | Input Length | gen_1 | gen_2 | gen_4 | gen_8 |
 |-------------|--------|--------|--------|--------|
@@ -25,6 +28,30 @@ Observations:
 1. The 1024 input length shows identical values across all generation lengths (445.26B), which might indicate a limit or issue at that input size
 2. Input length has an exponential impact on instruction count
 
+### Incremental Generation Cost Analysis
+
+When analyzing the incremental cost of generating additional tokens, we observe some interesting patterns:
+
+1. **Stable Cost Region (Input Length 1-64):**
+   - Generating 1 additional token: ~1.13B instructions
+   - Generating 3 additional tokens: ~3.38B instructions (1.13B per token)
+   - Generating 7 additional tokens: ~7.90B instructions (1.13B per token)
+   
+   This shows a remarkably stable cost for generating additional tokens when working with shorter inputs.
+
+2. **Increasing Cost Region (Input Length > 64):**
+   The cost of generating additional tokens starts to increase more significantly:
+
+| Input Length | Cost for +1 token | Cost for +3 tokens | Cost for +7 tokens |
+|-------------|--------|--------|--------------------|
+| 128         | 1.19B            | 3.55B             | 8.29B              |
+| 256         | 1.28B            | 3.81B             | 8.89B              |
+| 512         | 1.55B            | 4.58B             | 10.66B             |
+
+### Processing Input is the key driver of computational costs
+
+There is the initial processing of the model and prep that contributes to overhead. 
+We see a near linear rate of scaling with input.
 
 ## Prerequisites
 
