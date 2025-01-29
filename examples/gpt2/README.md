@@ -66,7 +66,17 @@ We see a near linear rate of scaling with input.
 cargo install ic-file-uploader
 ```
 
-2. Install frontend dependencies:
+2. Add support for the WebAssembly System Interface (WASI) target to your Rust toolchain: 
+```bash 
+rustup target add wasm32-wasi 
+```
+
+3. Add wasi2ic tool, which is needed to convert the WASI-compiled Wasm to IC-compatible Wasm
+```bash 
+cargo install wasi2ic
+```
+
+4. Install frontend dependencies:
 ```bash
 npm install @vitejs/plugin-react --save-dev
 npm install class-variance-authority clsx tailwind-merge lucide-react
@@ -74,7 +84,7 @@ npm install @radix-ui/react-slider @radix-ui/react-slot
 npm install -D @shadcn/ui
 ```
 
-3. Set up shadcn/ui components:
+5. Set up shadcn/ui components:
 ```bash
 npx shadcn-ui init
 npx shadcn-ui@latest add slider
