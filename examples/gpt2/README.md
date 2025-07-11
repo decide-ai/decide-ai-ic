@@ -68,7 +68,7 @@ cargo install ic-file-uploader
 
 2. Add support for the WebAssembly System Interface (WASI) target to your Rust toolchain: 
 ```bash 
-rustup target add wasm32-wasi 
+rustup target add wasm32-wasip1 
 ```
 
 3. Add wasi2ic tool, which is needed to convert the WASI-compiled Wasm to IC-compatible Wasm

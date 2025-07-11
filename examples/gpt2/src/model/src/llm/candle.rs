@@ -376,6 +376,7 @@ mod inference_benchmarks {
     define_bench_fn!(8, 1);
     define_bench_fn!(8, 2);
     define_bench_fn!(8, 4);
+    /*
     define_bench_fn!(8, 8);
     define_bench_fn!(16, 1);
     define_bench_fn!(16, 2);
@@ -405,4 +406,5 @@ mod inference_benchmarks {
     define_bench_fn!(1024, 2);
     define_bench_fn!(1024, 4);
     define_bench_fn!(1024, 8);
+    */
 }
