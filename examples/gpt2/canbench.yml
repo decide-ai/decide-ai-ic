@@ -1,9 +1,9 @@
 build_cmd: >-
-    RUSTFLAGS="$RUSTFLAGS -C target-feature=+simd128" cargo build --release --target wasm32-wasi --features canbench-rs && 
-    wasi2ic ./target/wasm32-wasi/release/model.wasm ./target/wasm32-wasi/release/model-ic.wasm &&
-    wasm-opt -Os -o ./target/wasm32-wasi/release/model-ic.wasm ./target/wasm32-wasi/release/model-ic.wasm
+    RUSTFLAGS="$RUSTFLAGS -C target-feature=+simd128" cargo build --release --target wasm32-wasip1 --features canbench-rs && 
+    wasi2ic ./target/wasm32-wasip1/release/model.wasm ./target/wasm32-wasip1/release/model-ic.wasm &&
+    wasm-opt -Os -o ./target/wasm32-wasip1/release/model-ic.wasm ./target/wasm32-wasip1/release/model-ic.wasm
 
-wasm_path: ./target/wasm32-wasi/release/model-ic.wasm
+wasm_path: ./target/wasm32-wasip1/release/model-ic.wasm
 
 stable_memory:
   file: ./canbench_assets/model.safetensors
